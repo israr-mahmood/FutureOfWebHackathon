@@ -95,8 +95,8 @@ async def publish_logs():
 # Function to start the WebSocket server
 async def start_server():
     # Create a WebSocket server that listens for incoming connections
-    server = await websockets.serve(handle_connection, "localhost", 8765)
-    print("Server started at ws://localhost:8765")
+    server = await websockets.serve(handle_connection, "localhost", 50000)
+    print("Server started at ws://localhost:50000")
     await server.wait_closed()
 
 # Run the WebSocket server
