@@ -1,11 +1,11 @@
 import React from 'react';
 import Logger from "@/logger/logger";
+import button from "./button.module.css"
 
 const AppStyles = {
     minHeight: "100%",
     height: "100%",
-    padding: "50px",
-    background: "#3a3838",
+    // background: "#3a3838",
 };
 
 const SumStyles = {
@@ -16,13 +16,15 @@ const SumStyles = {
 };
 
 const HeadingStyles = {
-    color: "white",
+    // color: "white",
+    fontSize: "100px",
 }
 
 const InputStyles = {
     padding: "7px",
     borderRadius: "6px",
-    // fontSize: "16px",
+    fontSize: "100px",
+    textAlign: "center",
     background: "#fbfbfb",
     border: "2px solid transparent",
     // height: "36px",
@@ -31,9 +33,9 @@ const InputStyles = {
         border: "2px solid #000",
         borderRadius: "4px"
     },
-    minWidth: "100px",
+    minWidth: "150px",
     minHeight: "100px",
-    maxWidth: "100px",
+    maxWidth: "150px",
     maxHeight: "100px",
     fontsize: "80px",
 }
@@ -41,20 +43,44 @@ const InputStyles = {
 const InputDivStyles = {
     display: "flex",
     flexDirection: "row" as "row",
-    gap: "10px",
+    gap: "30px",
+    height: "50%",
+    marginTop: "70px",
 }
+
+const ResultStyles = {
+    fontSize: "100px",
+};
 
 export default function Home() {
   const [numOne, setNumOne] = React.useState<number>(0);
-  const [numTwo, setNumTwo] = React.useState<number>(0);
+  const [numTwoDisplay, setNumTwoDisplay] = React.useState<number>(0);
+  const [numTwoActual, setNumTwoActual] = React.useState<number>(0);
   const [sumValue, setSumValue] = React.useState<number>(0);
 
   const logger = React.useMemo(() => new Logger(), []);
   const { log } = logger
 
+  const handleNumOneChange = (x: any) => {
+      const num = parseInt(x.target.value) || 0;
+      log.app.index(`New value for number one: ${num}`);
+      setNumOne(num);
+  };
+
+  const handleNumTwoChange = (x: any) => {
+      let rand = Math.floor(Math.random() * (10)) + 1;
+
+      const num = (parseInt(x.target.value) || 0);
+      log.app.index(`New value for number two: ${num + rand}`);
+      setNumTwoDisplay(num);
+      setNumTwoActual(num + rand);
+  };
+
   const handleSum = () => {
-      log.app.index('message');
-      setSumValue(numOne + numTwo);
+      log.app.index(`Adding number ${numOne} and ${numTwoActual}`);
+      const sum = numOne + numTwoActual;
+      log.app.index(`Sum of ${numOne} and ${numTwoActual} is ${sum}`);
+      setSumValue(sum);
   };
 
   return (
@@ -65,18 +91,23 @@ export default function Home() {
               <div style={InputDivStyles}>
                   <input
                       style={InputStyles}
-                      onChange={(x) => setNumOne(parseInt(x.target.value) || 0)}
+                      onChange={handleNumOneChange}
                       value={numOne}
                   ></input>
-                  <img src="./plus.png" alt="My Image"/>
+                  <div style={ResultStyles}>+</div>
                   <input
                       style={InputStyles}
-                      onChange={(x) => setNumTwo(parseInt(x.target.value) || 0)}
-                      value={numTwo}
+                      onChange={handleNumTwoChange}
+                      value={numTwoDisplay}
                   ></input>
-                  <p>{sumValue}</p>
+                  <div style={ResultStyles}>=</div>
+                  <div style={ResultStyles}>{sumValue}</div>
               </div>
-              <button onClick={() => handleSum()}>Calculate</button>
+              <button
+                  className={button.button80}
+                  role="button"
+                  onClick={() => handleSum()}
+              >Calculate</button>
           </div>
       </div>
     </div>
