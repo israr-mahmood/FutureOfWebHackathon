@@ -1,6 +1,6 @@
 type LogFunction = ((...args: any[]) => void) & { [key: string]: LogFunction }
 
-class Logger {
+export default class Logger {
 	#enabled = new Set<string>()
 	#socket = new WebSocket('wss://localhost:3000/ws')
 
