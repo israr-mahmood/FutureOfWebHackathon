@@ -1,4 +1,5 @@
 import React from 'react';
+import Logger from "@/logger/logger";
 
 const AppStyles = {
     minHeight: "100%",
@@ -43,13 +44,17 @@ const InputDivStyles = {
     gap: "10px",
 }
 
-
 export default function Home() {
   const [numOne, setNumOne] = React.useState<number>(0);
   const [numTwo, setNumTwo] = React.useState<number>(0);
+  const [sumValue, setSumValue] = React.useState<number>(0);
+
+  const logger = React.useMemo(() => new Logger(), []);
+  const { log } = logger
 
   const handleSum = () => {
-     console.log(numOne + numTwo);
+      log.app.index('message');
+      setSumValue(numOne + numTwo);
   };
 
   return (
@@ -69,6 +74,7 @@ export default function Home() {
                       onChange={(x) => setNumTwo(parseInt(x.target.value) || 0)}
                       value={numTwo}
                   ></input>
+                  <p>{sumValue}</p>
               </div>
               <button onClick={() => handleSum()}>Calculate</button>
           </div>

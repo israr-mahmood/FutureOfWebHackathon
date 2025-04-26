@@ -1,8 +1,8 @@
 type LogFunction = ((...args: any[]) => void) & { [key: string]: LogFunction }
 
 export default class Logger {
-	#enabled = new Set<string>()
-	#socket = new WebSocket('wss://localhost:50000/ws')
+	#enabled = new Set<string>(['app.index'])
+	#socket = new WebSocket('ws://localhost:50000/ws')
 
 	constructor() {
 		if (typeof window !== 'undefined') {
@@ -52,6 +52,6 @@ export default class Logger {
 	}
 }
 
-const logger = new Logger()
-const { log } = logger
-log.a.b.c('message')
+// const logger = new Logger()
+// const { log } = logger
+// log.a.b.c('message')
