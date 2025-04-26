@@ -1,12 +1,16 @@
 import asyncio
 import websockets
 import json
+from datetime import datetime
 
 # Set up an empty list to hold all flag changes
 flag_changes = []
 
 # Set up a set to keep track of connected clients
 connected_clients = set()
+
+# Set up a list to store log messages
+log_messages = []
 
 async def handle_connection(websocket):
     # Add new client to the list of connected clients
@@ -35,6 +39,9 @@ async def handle_connection(websocket):
                 elif message_type == "subscribe":
                     # Handle subscription requests
                     await handle_subscription(websocket, data)
+                elif "path" in data and "messages" in data:
+                    # Handle log message from logger
+                    await handle_log_message(data)
                     
             except json.JSONDecodeError:
                 print(f"Invalid JSON message received: {message}")
@@ -46,6 +53,25 @@ async def handle_connection(websocket):
         connected_clients.remove(websocket)
         print(f"Client disconnected. Total clients: {len(connected_clients)}")
 
+async def handle_log_message(data):
+    """Handle incoming log message from logger"""
+    path = data.get("path")
+    messages = data.get("messages", [])
+    timestamp = datetime.now().isoformat()
+    
+    # Create log entry
+    log_entry = {
+        "timestamp": timestamp,
+        "path": path,
+        "messages": messages
+    }
+    
+    # Store the log message
+    log_messages.append(log_entry)
+    
+    # Broadcast the log message to all subscribers
+    await publish_logs()
+
 async def handle_subscription(websocket, data):
     """Handle client subscription requests"""
     subscription_type = data.get("subscription_type")
@@ -53,8 +79,14 @@ async def handle_subscription(websocket, data):
         # Send current flags to the subscriber
         await websocket.send(json.dumps({"type": "flags", "data": flag_changes}))
     elif subscription_type == "logs":
-        # Send current log state to the subscriber
-        await websocket.send(json.dumps({"type": "log_state", "data": {"active": log_active}}))
+        # Send current log state and recent logs to the subscriber
+        await websocket.send(json.dumps({
+            "type": "log_state",
+            "data": {
+                "active": log_active,
+                "logs": log_messages[-100:]  # Send last 100 log messages
+            }
+        }))
 
 # Function to change a flag and notify all connected clients
 async def change_flag(new_flag):
@@ -85,7 +117,13 @@ async def toggle_log():
 
 # Function to publish log data
 async def publish_logs():
-    message = json.dumps({"type": "log_state", "data": {"active": log_active}})
+    message = json.dumps({
+        "type": "log_state",
+        "data": {
+            "active": log_active,
+            "logs": log_messages[-100:]  # Send last 100 log messages
+        }
+    })
     for websocket in connected_clients:
         try:
             await websocket.send(message)
