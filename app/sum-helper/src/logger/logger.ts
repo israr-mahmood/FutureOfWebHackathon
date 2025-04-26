@@ -18,7 +18,7 @@ export default class Logger {
 			 	enabled: boolean
 			 }
 			 */
-			const { path, enabled } = event.data as { path: string; enabled: boolean }
+			const { path, enabled } = JSON.parse(event.data) as { path: string; enabled: boolean }
 			if (enabled) {
 				this.#enabled.add(path)
 			} else {

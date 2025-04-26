@@ -10,7 +10,7 @@ const AppStyles = {
 
 const SumStyles = {
   display: "flex",
-  flexDirection: "column" as "column",
+  flexDirection: "column" as const,
   justifyContent: "center",
   alignItems: "center"
 };
@@ -42,10 +42,10 @@ const InputStyles = {
 
 const InputDivStyles = {
     display: "flex",
-    flexDirection: "row" as "row",
     gap: "30px",
     height: "50%",
     marginTop: "70px",
+    flexDirection: "row" as const,
 }
 
 const ResultStyles = {
