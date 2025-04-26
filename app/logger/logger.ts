@@ -2,7 +2,7 @@ type LogFunction = ((...args: any[]) => void) & { [key: string]: LogFunction }
 
 export default class Logger {
 	#enabled = new Set<string>()
-	#socket = new WebSocket('wss://localhost:3000/ws')
+	#socket = new WebSocket('wss://localhost:50000/ws')
 
 	constructor() {
 		if (typeof window !== 'undefined') {
@@ -10,8 +10,20 @@ export default class Logger {
 				this.#socket.close()
 			})
 		}
-		this.#socket.onmessage = function (event) {
-			console.log(`[message] Data received from server: ${event.data}`)
+		this.#socket.onmessage = (event)=>{
+			/*
+			 expecting event.data to be:
+			 {
+			 	"path": "a.b.c",
+			 	enabled: boolean
+			 }
+			 */
+			const { path, enabled } = event.data as { path: string; enabled: boolean }
+			if (enabled) {
+				this.#enabled.add(path)
+			} else {
+				this.#enabled.delete(path)
+			}
 		}
 	}
 
