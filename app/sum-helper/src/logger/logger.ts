@@ -1,4 +1,4 @@
-type LogFunction = ((...args: any[]) => void) & { [key: string]: LogFunction }
+type LogFunction = ((...args: unknown[]) => void) & { [key: string]: LogFunction }
 
 export default class Logger {
 	#enabled = new Set<string>(['app.index'])
@@ -10,7 +10,7 @@ export default class Logger {
 				this.#socket.close()
 			})
 		}
-		this.#socket.onmessage = (event)=>{
+		this.#socket.onmessage = (event) => {
 			/*
 			 expecting event.data to be:
 			 {
@@ -29,12 +29,13 @@ export default class Logger {
 
 	get log() {
 		const enabled = this.#enabled
+		const socket = this.#socket
 
 		const createHandler = (currentPath: string[] = []) => ({
-			get(_target: any, prop: string) {
+			get(_target: unknown, prop: string) {
 				return new Proxy((() => {}) as LogFunction, createHandler([...currentPath, prop]))
 			},
-			apply(_target: any, _thisArg: any, args: any[]) {
+			apply(_target: unknown, _thisArg: unknown, args: unknown[]) {
 				const messages =
 					args.length === 0 ? [''] : args.map((arg) => (arg === undefined ? '' : arg))
 				const path = currentPath.join('.')
@@ -42,7 +43,7 @@ export default class Logger {
 
 				if (logIsEnabled) {
 					console.log(`${path}`, ...messages)
-					this.#socket.send(JSON.stringify({ path, messages }))
+					socket.send(JSON.stringify({ path, messages }))
 				}
 			},
 		})
