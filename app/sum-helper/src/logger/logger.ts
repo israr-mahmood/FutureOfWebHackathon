@@ -1,7 +1,7 @@
 type LogFunction = ((...args: unknown[]) => void) & { [key: string]: LogFunction }
 
 export default class Logger {
-	#enabled = new Set<string>(['app.index'])
+	#enabled = new Set<string>()
 	#socket = new WebSocket('ws://localhost:50000/ws')
 
 	constructor() {
@@ -18,10 +18,11 @@ export default class Logger {
 			 	enabled: boolean
 			 }
 			 */
-			const { path, enabled } = JSON.parse(event.data) as { path: string; enabled: boolean }
-			if (enabled) {
+			const { path, isEnabled } = JSON.parse(event.data) as { path: string; isEnabled: boolean }
+			console.log('ws message',JSON.parse(event.data))
+			if (isEnabled) {
 				this.#enabled.add(path)
-			} else {
+			} else if (isEnabled === false) {
 				this.#enabled.delete(path)
 			}
 		}
@@ -36,13 +37,14 @@ export default class Logger {
 				return new Proxy((() => {}) as LogFunction, createHandler([...currentPath, prop]))
 			},
 			apply(_target: unknown, _thisArg: unknown, args: unknown[]) {
-				const message =
-					args.length === 0 ? [''] : args.map((arg) => (arg === undefined ? '' : arg))
+				// const message = args.length === 0 ? [''] : args.map((arg) => (arg === undefined ? '' : arg))
+				const message = args.length === 0 ? [''] : args.join(', ')
 				const path = currentPath.join('.')
 				const logIsEnabled = enabled.has(path)
-
+				console.log('isEnabled', logIsEnabled, enabled)
 				if (logIsEnabled) {
 					console.log(`${path}`, ...message)
+					console.log('logger')
 					socket.send(JSON.stringify({ type: 'NEW_LOG', path, message }))
 				}
 			},

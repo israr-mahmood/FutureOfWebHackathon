@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Box, render, Text, useApp, useInput } from 'ink'
+import { Box, render, Spacer, Text, useApp, useInput } from 'ink'
 import { useEffect, useState } from 'react'
 import WebSocket from 'ws'
 import { z } from 'zod'
@@ -9,6 +9,7 @@ process.stdout.write('\x1Bc')
 const socket = new WebSocket('ws://localhost:50000/ws')
 
 const defaultConfig: Record<string, boolean> = {
+	'app.index': false,
 	a: false,
 	'a.b': false,
 	'a.b.c': false,
@@ -131,9 +132,15 @@ const App = () => {
 	}, [exit])
 
 	return (
-		<Box flexDirection='column' flexGrow={1} height={'100%'}>
+		<Box
+			flexDirection='column'
+			// height={10}
+			borderStyle='round'
+			borderColor='blue'
+		>
 			{view === 'logs' && <LogStream logs={logs} />}
 			{view === 'toggles' && <Toggles config={config} />}
+			<Spacer />
 			<Box marginTop={1}>
 				<Text dimColor>(1) toggles (2) logs</Text>
 			</Box>
