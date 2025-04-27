@@ -28,11 +28,27 @@ const LogStream = ({ logs }: { logs: { path: string; message: string }[] }) => {
 }
 
 const Toggles = ({ config }: { config: Record<string, boolean> }) => {
+	const [selectedIndex, setSelectedIndex] = useState(0)
+	const entries = Object.entries(config)
+
+	useInput((input, key) => {
+		if (key.upArrow) {
+			setSelectedIndex((prev) => (prev > 0 ? prev - 1 : entries.length - 1))
+		}
+		if (key.downArrow) {
+			setSelectedIndex((prev) => (prev < entries.length - 1 ? prev + 1 : 0))
+		}
+		if (key.return) {
+			const [path, value] = entries[selectedIndex]
+			socket.send(JSON.stringify({ type: 'SET_FLAG', path, isEnabled: !value }))
+		}
+	})
+
 	return (
 		<Box flexDirection='column' flexGrow={1}>
 			<Text bold>Feature Toggles:</Text>
-			{Object.entries(config).map(([key, value]) => (
-				<Text key={Math.random()}>
+			{entries.map(([key, value], index) => (
+				<Text key={key} backgroundColor={index === selectedIndex ? 'blue' : undefined}>
 					{key}: {value ? 'enabled' : 'disabled'}
 				</Text>
 			))}
@@ -137,8 +153,8 @@ const App = () => {
 			flexGrow={1}
 			height={'100%'}
 			minHeight={'100%'}
-			borderStyle='round'
-			borderColor='blue'
+			// borderStyle='round'
+			// borderColor='blue'
 		>
 			{view === 'logs' && <LogStream logs={logs} />}
 			{view === 'toggles' && <Toggles config={config} />}
