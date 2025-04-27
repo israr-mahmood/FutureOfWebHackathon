@@ -24,7 +24,7 @@ const InputStyles = {
     padding: "7px",
     borderRadius: "6px",
     fontSize: "100px",
-    textAlign: "center",
+    textAlign: "center" as const,
     background: "#fbfbfb",
     border: "2px solid transparent",
     // height: "36px",
