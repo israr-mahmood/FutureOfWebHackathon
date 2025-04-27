@@ -32,7 +32,7 @@ const Toggles = ({ config }: { config: Record<string, boolean> }) => {
 			<Text bold>Feature Toggles:</Text>
 			{Object.entries(config).map(([key, value]) => (
 				<Text key={Math.random()}>
-					{key}: {value?.toString() ?? 'false'}
+					{key}: {value ? 'enabled' : 'disabled'}
 				</Text>
 			))}
 		</Box>
@@ -48,17 +48,26 @@ const useLogs = () => {
 	return { logs, addLog }
 }
 
+const useConfig = () => {
+	const [config, setConfig] = useState<Record<string, boolean>>(defaultConfig)
+	const setFlag = (path: string, value: boolean) => {
+		setConfig({ ...config, [path]: value })
+	}
+	return { config, setFlag }
+}
+
 const App = () => {
 	const { exit } = useApp()
 	const [view, setView] = useState<'logs' | 'toggles'>('logs')
 	const { logs, addLog } = useLogs()
-	const [config, setConfig] = useState<Record<string, boolean>>(defaultConfig)
+	const { config, setFlag } = useConfig()
 	useEffect(() => {
 		socket.on('message', (wsData) => {
+			console.log(wsData.toString())
 			const { data, success } = z
 				.discriminatedUnion('type', [
 					z.object({ type: z.literal('NEW_LOG'), path: z.string(), message: z.string() }),
-					z.object({ type: z.literal('SET_FLAG'), path: z.string(), value: z.boolean() }),
+					z.object({ type: z.literal('SET_FLAG'), path: z.string(), isEnabled: z.boolean() }),
 				])
 				.safeParse(JSON.parse(wsData.toString()))
 
@@ -74,7 +83,7 @@ const App = () => {
 					addLog(path, data.message)
 					break
 				case 'SET_FLAG':
-					setConfig({ ...config, [path]: data.value })
+					setFlag(path, data.isEnabled)
 					break
 			}
 		})

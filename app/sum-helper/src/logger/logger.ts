@@ -36,14 +36,14 @@ export default class Logger {
 				return new Proxy((() => {}) as LogFunction, createHandler([...currentPath, prop]))
 			},
 			apply(_target: unknown, _thisArg: unknown, args: unknown[]) {
-				const messages =
+				const message =
 					args.length === 0 ? [''] : args.map((arg) => (arg === undefined ? '' : arg))
 				const path = currentPath.join('.')
 				const logIsEnabled = enabled.has(path)
 
 				if (logIsEnabled) {
-					console.log(`${path}`, ...messages)
-					socket.send(JSON.stringify({ path, messages }))
+					console.log(`${path}`, ...message)
+					socket.send(JSON.stringify({ type: 'NEW_LOG', path, message }))
 				}
 			},
 		})
