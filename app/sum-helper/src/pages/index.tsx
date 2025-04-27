@@ -5,7 +5,6 @@ import button from "./button.module.css"
 const AppStyles = {
     minHeight: "100%",
     height: "100%",
-    // background: "#3a3838",
 };
 
 const SumStyles = {
@@ -16,7 +15,6 @@ const SumStyles = {
 };
 
 const HeadingStyles = {
-    // color: "white",
     fontSize: "100px",
 }
 
@@ -27,7 +25,6 @@ const InputStyles = {
     textAlign: "center" as const,
     background: "#fbfbfb",
     border: "2px solid transparent",
-    // height: "36px",
     boxShadow: "0 0 0 1px #dddddd, 0 2px 4px 0 rgb(0 0 0 / 7%), 0 1px 1.5px 0 rgb(0 0 0 / 5%)",
     focus: {
         border: "2px solid #000",
@@ -61,27 +58,27 @@ export default function Home() {
   const logger = React.useMemo(() => new Logger(), []);
   const { log } = logger
 
-  const handleNumOneChange = (x: any) => {
+  const handleNumOneChange = React.useCallback((x: any) => {
       const num = parseInt(x.target.value) || 0;
       log.app.index(`New value for number one: ${num}`);
       setNumOne(num);
-  };
+  }, [setNumOne]);
 
-  const handleNumTwoChange = (x: any) => {
+  const handleNumTwoChange = React.useCallback((x: any) => {
       let rand = Math.floor(Math.random() * (10)) + 1;
 
       const num = (parseInt(x.target.value) || 0);
       log.app.index(`New value for number two: ${num + rand}`);
       setNumTwoDisplay(num);
       setNumTwoActual(num + rand);
-  };
+  }, [setNumTwoDisplay, setNumTwoActual]);
 
-  const handleSum = () => {
-      log.app.index(`Adding number ${numOne} and ${numTwoActual}`);
-      const sum = numOne + numTwoActual;
-      log.app.index(`Sum of ${numOne} and ${numTwoActual} is ${sum}`);
-      setSumValue(sum);
-  };
+    const handleSum = React.useCallback((numOneValue: number, numTwoActualValue: number) => {
+        log.app.index(`Adding number ${numOneValue} and ${numTwoActualValue}`);
+        const sum = numOneValue + numTwoActualValue;
+        log.app.index(`Sum of ${numOneValue} and ${numTwoActualValue} is ${sum}`);
+        setSumValue(sum);
+    }, []);
 
   return (
     <div style={AppStyles}>
@@ -106,7 +103,7 @@ export default function Home() {
               <button
                   className={button.button80}
                   role="button"
-                  onClick={() => handleSum()}
+                  onClick={() => handleSum(numOne, numTwoActual)}
               >Calculate</button>
           </div>
       </div>
