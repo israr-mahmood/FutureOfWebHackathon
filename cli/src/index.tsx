@@ -1,86 +1,48 @@
 #!/usr/bin/env node
 import { Box, render, Text, useApp, useInput } from 'ink'
 import { useEffect, useState } from 'react'
-
+import WebSocket from 'ws'
+import { z } from 'zod'
 // Clear the terminal before rendering
 process.stdout.write('\x1Bc')
 
-const config = {
-	a: {
-		enabled: true,
-		b: {
-			enabled: true,
-			c: {
-				enabled: true,
-			},
-		},
-	},
-	feat1: {
-		enabled: true,
-		feat2: {
-			enabled: true,
-			feat3: {
-				enabled: true,
-			},
-		},
-	},
+const socket = new WebSocket('ws://localhost:50000/ws')
+
+const defaultConfig: Record<string, boolean> = {
+	a: false,
+	'a.b': false,
+	'a.b.c': false,
 }
 
-const LogStream = () => {
+const LogStream = ({ logs }: { logs: { path: string; message: string }[] }) => {
 	return (
-		<Box flexDirection='column'>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
-			<Text>LogStream</Text>
+		<Box flexDirection='column' flexGrow={1}>
+			{logs.map((log) => (
+				<Text key={Math.random()}>
+					{log.path}: {log.message}
+				</Text>
+			))}
 		</Box>
 	)
 }
 
-const Toggles = () => {
-	const renderToggles = (obj: any, prefix = '') => {
-		return Object.entries(obj).map(([key, value]) => {
-			if (typeof value === 'object') {
-				return (
-					<Box key={key} flexDirection='column' marginLeft={1}>
-						<Text>
-							{prefix}
-							{key}
-						</Text>
-						{renderToggles(value, prefix + '  ')}
-					</Box>
-				)
-			}
-			return (
-				<Text key={key}>
-					{prefix}
-					{key}: {value?.toString() ?? Math.random()}
-				</Text>
-			)
-		})
-	}
-
+const Toggles = ({ config }: { config: Record<string, boolean> }) => {
 	return (
-		<Box flexDirection='column'>
+		<Box flexDirection='column' flexGrow={1}>
 			<Text bold>Feature Toggles:</Text>
-			{renderToggles(config)}
+			{Object.entries(config).map(([key, value]) => (
+				<Text key={Math.random()}>
+					{key}: {value?.toString() ?? 'false'}
+				</Text>
+			))}
 		</Box>
 	)
 }
 
 const useLogs = () => {
-	const [logs, setLogs] = useState<string[]>([])
-	const addLog = (log: string) => {
-		setLogs([...logs, log])
+	const [logs, setLogs] = useState<{ path: string; message: string }[]>([])
+	const addLog = (path: string, message: string) => {
+		setLogs([...logs, { path, message }])
 	}
 
 	return { logs, addLog }
@@ -89,10 +51,42 @@ const useLogs = () => {
 const App = () => {
 	const { exit } = useApp()
 	const [view, setView] = useState<'logs' | 'toggles'>('logs')
+	const { logs, addLog } = useLogs()
+	const [config, setConfig] = useState<Record<string, boolean>>(defaultConfig)
+	useEffect(() => {
+		socket.on('message', (wsData) => {
+			const { data, success } = z
+				.discriminatedUnion('type', [
+					z.object({ type: z.literal('NEW_LOG'), path: z.string(), message: z.string() }),
+					z.object({ type: z.literal('SET_FLAG'), path: z.string(), value: z.boolean() }),
+				])
+				.safeParse(JSON.parse(wsData.toString()))
+
+			if (!success) {
+				console.error('Invalid message', wsData.toString())
+				return
+			}
+
+			const { type, path } = data
+
+			switch (type) {
+				case 'NEW_LOG':
+					addLog(path, data.message)
+					break
+				case 'SET_FLAG':
+					setConfig({ ...config, [path]: data.value })
+					break
+			}
+		})
+		return () => {
+			socket.close()
+		}
+	}, [])
 
 	const switchView = (newView: 'logs' | 'toggles') => {
 		if (newView !== view) {
-			process.stdout.write('\x1Bc')
+			// Clear screen and scrollback buffer
+			process.stdout.write('\x1B[2J\x1B[3J\x1B[H')
 			setView(newView)
 		}
 	}
@@ -128,11 +122,11 @@ const App = () => {
 	}, [exit])
 
 	return (
-		<Box flexDirection='column'>
-			{view === 'logs' && <LogStream />}
-			{view === 'toggles' && <Toggles />}
+		<Box flexDirection='column' flexGrow={1} height={'100%'}>
+			{view === 'logs' && <LogStream logs={logs} />}
+			{view === 'toggles' && <Toggles config={config} />}
 			<Box marginTop={1}>
-				<Text dimColor>(1) toggles (2) logs </Text>
+				<Text dimColor>(1) toggles (2) logs</Text>
 			</Box>
 		</Box>
 	)

@@ -14,11 +14,13 @@
 	},
 	"dependencies": {
 		"ink": "^4.4.1",
-		"react": "^18.2.0"
+		"react": "^18.2.0",
+		"zod": "^3.24.3"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.24",
 		"@types/react": "^18.2.61",
+		"@types/ws": "^8.18.1",
 		"tsx": "^4.7.1",
 		"typescript": "^5.3.3"
 	}
