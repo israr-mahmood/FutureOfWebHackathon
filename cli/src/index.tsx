@@ -10,16 +10,16 @@ const socket = new WebSocket('ws://localhost:50000/ws')
 
 const defaultConfig: Record<string, boolean> = {
 	'app.index': false,
-	a: false,
-	'a.b': false,
-	'a.b.c': false,
+	// a: false,
+	// 'a.b': false,
+	// 'a.b.c': false,
 }
 
 const LogStream = ({ logs }: { logs: { path: string; message: string }[] }) => {
 	return (
 		<Box flexDirection='column' flexGrow={1}>
-			{logs.map((log) => (
-				<Text key={Math.random()}>
+			{logs.map((log, index) => (
+				<Text key={index}>
 					{log.path}: {log.message}
 				</Text>
 			))}
@@ -43,7 +43,7 @@ const Toggles = ({ config }: { config: Record<string, boolean> }) => {
 const useLogs = () => {
 	const [logs, setLogs] = useState<{ path: string; message: string }[]>([])
 	const addLog = (path: string, message: string) => {
-		setLogs([...logs, { path, message }])
+		setLogs((prev) => [...prev, { path, message }])
 	}
 
 	return { logs, addLog }
@@ -64,7 +64,6 @@ const App = () => {
 	const { config, setFlag } = useConfig()
 	useEffect(() => {
 		socket.on('message', (wsData) => {
-			console.log(wsData.toString())
 			const { data, success } = z
 				.discriminatedUnion('type', [
 					z.object({ type: z.literal('NEW_LOG'), path: z.string(), message: z.string() }),
@@ -84,6 +83,7 @@ const App = () => {
 					addLog(path, data.message)
 					break
 				case 'SET_FLAG':
+					console.log('setting flag', path, data.isEnabled)
 					setFlag(path, data.isEnabled)
 					break
 			}
@@ -134,7 +134,9 @@ const App = () => {
 	return (
 		<Box
 			flexDirection='column'
-			// height={10}
+			flexGrow={1}
+			height={'100%'}
+			minHeight={'100%'}
 			borderStyle='round'
 			borderColor='blue'
 		>
